@@ -1,9 +1,8 @@
 {
   "name": "bull-cartel-backend",
   "version": "1.0.0",
-  "description": "Secure backend for Bull Cartel trading dashboard - handles auth, encrypted broker credential vault, and broker API proxying",
+  "description": "",
   "main": "src/server.js",
-  "type": "commonjs",
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
@@ -29,3 +28,4 @@
   "engines": {
     "node": ">=18.0.0"
   }
+}
