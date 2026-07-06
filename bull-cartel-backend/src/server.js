@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 const authRoutes = require('./routes/authRoutes');
 const { router: vaultRoutes } = require('./routes/vaultRoutes');
 const brokerRoutes = require('./routes/brokerRoutes');
+const aiScreenerRoutes = require('./routes/aiScreener');
 
 const app = express();
 
@@ -38,7 +39,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/vault', vaultRoutes);
 app.use('/api/broker', brokerRoutes);
-
+app.use('/api/ai', aiScreenerRoutes);
 // --- 404 handler ---
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
