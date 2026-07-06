@@ -7,7 +7,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "migrate": "node src/db/migrate.js"
-  },
+  const aiScreenerRoutes = require('./routes/aiscreener');
   "dependencies": {
     "express": "^4.19.2",
     "pg": "^8.12.0",
