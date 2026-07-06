@@ -1,4 +1,4 @@
-aiScreener.js/*
+aiscreener.js/*
   AI STOCK SCREENER — BACKEND ROUTE (fully self-contained, no edits needed)
   --------------------------------------------------------------------------
   File: routes/aiScreener.js  (save it here in your existing bull-cartel-backend)
