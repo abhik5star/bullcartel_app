@@ -1,58 +1,17 @@
-aiscreener.js/*
-  AI STOCK SCREENER — BACKEND ROUTE (fully self-contained, no edits needed)
-  --------------------------------------------------------------------------
-  File: routes/aiScreener.js  (save it here in your existing bull-cartel-backend)
-
-  Wiring (in your main server file, e.g. server.js / app.js) — ONE line:
-      app.use(require('./routes/aiScreener'));
-
-  Env vars needed (Railway → your project → Variables):
-      OPENAI_API_KEY=sk-...
-      JWT_SECRET=...        (the SAME secret your /api/auth/login already signs
-                              tokens with — must match or every request will 401)
-
-  Install once:
-      npm install openai express jsonwebtoken
-
-  Notes:
-  - No dependency on your existing middleware file/path — auth is verified
-    inline right here with the standard `jsonwebtoken` package, using the
-    Bearer token the frontend already sends (authToken from apiRequest()).
-    That means this file works as-is, with zero edits.
-  - The OpenAI key stays server-side, in an env var. It never reaches the browser.
-  - The model returns STRUCTURED JSON only (fixed fields) — never a code string,
-    so the frontend never eval()s anything. A bad/adversarial prompt can at worst
-    produce a filter that matches nothing or everything, not run arbitrary code.
-  - Matches what the frontend already expects: POST /api/ai/screener { prompt },
-    called from runAiScreener() in the dashboard.
-*/
+// src/routes/aiScreener.js
+//
+// AI STOCK SCREENER — matches bull-cartel-backend's existing structure exactly.
+// Uses the same requireAuth middleware (src/middleware/auth.js) as your
+// authRoutes / vaultRoutes / brokerRoutes.
 
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const { OpenAI } = require("openai");
+const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Inline auth check — verifies the same Bearer JWT your /api/auth/login issues.
-// No import needed from your existing middleware folder, so nothing to wire up.
-function requireAuth(req, res, next) {
-  const header = req.headers.authorization || "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-  if (!token) return res.status(401).json({ error: "Missing auth token" });
-  if (!process.env.JWT_SECRET) {
-    return res.status(500).json({ error: "JWT_SECRET not set on server" });
-  }
-  try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  } catch {
-    return res.status(401).json({ error: "Invalid or expired token" });
-  }
-}
-
-// Keep this in sync with the fields renderMbFilter() on the frontend actually
-// understands. Add fields on both sides together if you extend it later.
+// Keep this in sync with the fields renderMbFilter() on the frontend understands.
 const SCREENER_SCHEMA_DESCRIPTION = `
 Return ONLY a JSON object (no markdown, no explanation text outside the JSON) with this exact shape:
 {
@@ -78,8 +37,6 @@ Only set fields the user's query actually implies; leave everything else null.
 `.trim();
 
 function sanitizeFilters(raw) {
-  // Whitelist + type-check every field. Anything unexpected is dropped
-  // rather than passed through, regardless of what the model returned.
   const numeric = [
     "maxPrice", "minPrice", "minVolSurge", "minDelivery",
     "minRevCagr", "minProfitCagr", "minRoe", "maxDe",
@@ -98,7 +55,8 @@ function sanitizeFilters(raw) {
 }
 
 // POST /api/ai/screener   { prompt: string }
-router.post("/api/ai/screener", requireAuth, async (req, res) => {
+// (mounted at /api/ai in server.js, so the full path becomes /api/ai/screener)
+router.post("/screener", requireAuth, async (req, res) => {
   const prompt = (req.body?.prompt || "").toString().trim();
   if (!prompt) return res.status(400).json({ error: "prompt is required" });
   if (prompt.length > 300) return res.status(400).json({ error: "prompt too long" });
@@ -135,4 +93,3 @@ router.post("/api/ai/screener", requireAuth, async (req, res) => {
 });
 
 module.exports = router;
-
